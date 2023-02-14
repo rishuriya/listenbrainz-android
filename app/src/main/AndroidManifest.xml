@@ -102,7 +102,21 @@
             android:theme="@style/AppThemeNoActionBar" />
         <activity
             android:name=".presentation.features.listens.RemotePlayerActivity"
-            android:theme="@style/AppThemeNoActionBar" />
+            android:theme="@style/AppThemeNoActionBar"/>
+
+
+        <activity
+            android:name=".presentation.features.listens.localRemotePlayer.localRemotePlayerActivity"
+            android:theme="@style/AppThemeNoActionBar"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:mimeType="audio/mpeg" android:scheme="file"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="audio/mpeg" android:scheme="content"/>
+            </intent-filter>
+        </activity>
 
         <!-- Sentry Setup-->
         <meta-data android:name="io.sentry.dsn" android:value="${sentryDsn}" />
