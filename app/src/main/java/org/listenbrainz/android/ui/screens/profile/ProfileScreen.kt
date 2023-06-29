@@ -1,5 +1,6 @@
 package org.listenbrainz.android.ui.screens.profile
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
@@ -36,11 +37,15 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.listenbrainz.android.R
+import org.listenbrainz.android.ui.screens.dashboard.ProfilePage
 import org.listenbrainz.android.ui.screens.listens.ListensScreen
 import org.listenbrainz.android.util.Constants.Strings.STATUS_LOGGED_IN
+import org.listenbrainz.android.util.Utils
 import org.listenbrainz.android.viewmodel.ProfileViewModel
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun ProfileScreen(
     context: Context = LocalContext.current,
@@ -48,22 +53,42 @@ fun ProfileScreen(
     shouldScrollToTop: MutableState<Boolean>
 ) {
     val scrollState = rememberScrollState()
-
     // Scroll to the top when shouldScrollToTop becomes true
+    var _cover_img= MutableStateFlow("")
+    val loginStatus = viewModel.getLoginStatusFlow()
+            .collectAsState(initial = viewModel.appPreferences.loginStatus, context = Dispatchers.Default)
+            .value
     LaunchedEffect(shouldScrollToTop.value) {
         if (shouldScrollToTop.value) {
             scrollState.animateScrollTo(0)
             shouldScrollToTop.value = false
         }
+        viewModel.appPreferences.username.let { username ->
+            if (username != null) {
+                viewModel.userDetails(userName = username)
+                viewModel.getPinnedSongs(userName = username)
+            }
+        }
     }
-
-    val loginStatus = viewModel.getLoginStatusFlow()
-        .collectAsState(initial = viewModel.appPreferences.loginStatus, context = Dispatchers.Default)
-        .value
-
+    val followers = viewModel.followersFlow.collectAsState().value.size
+    val following = viewModel.followingFlow.collectAsState().value.size
+    val totalListen = viewModel.listenCountFlow.collectAsState().value
+    val pinnedSong = viewModel.pinnedFlow.collectAsState().value
+    if(pinnedSong.size>0) {
+        val cover_img = Utils.getCoverArtUrl(
+                caaReleaseMbid = pinnedSong.first().track_metadata.mbid_mapping.caa_release_mbid,
+                caaId = pinnedSong.first().track_metadata.mbid_mapping.caa_id
+        )
+        _cover_img.value=cover_img
+    }
     when(loginStatus) {
         STATUS_LOGGED_IN -> {
-            ListensScreen(shouldScrollToTop = shouldScrollToTop)
+            ProfilePage(
+                    followers=followers,
+                    following = following,
+                    totalListen = totalListen,
+                    background = _cover_img.value
+            )
         }
         else -> {
             Column(

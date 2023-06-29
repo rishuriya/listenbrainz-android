@@ -58,5 +58,5 @@ class PlaylistViewModel @Inject constructor(
     }
 
     suspend fun updatePlaylist(songs: List<Song>, playlistID: Long) =
-        playlistRepository.updatePlaylist(songs, playlistID)
+        playlistRepository.updatePlaylist(songs,songs.last().albumArt, playlistID)
 }

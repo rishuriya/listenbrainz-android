@@ -28,6 +28,7 @@ import okhttp3.OkHttpClient
 import org.listenbrainz.android.BuildConfig
 import org.listenbrainz.android.model.Listen
 import org.listenbrainz.android.model.ListenBitmap
+import org.listenbrainz.android.model.PinnedRecording
 import org.listenbrainz.android.repository.AppPreferences
 import org.listenbrainz.android.repository.ListensRepository
 import org.listenbrainz.android.service.YouTubeApiService
@@ -58,7 +59,6 @@ class ListensViewModel @Inject constructor(
 
     private val _listensFlow = MutableStateFlow(listOf<Listen>())
     val listensFlow = _listensFlow.asStateFlow()
-    
     private val _isSpotifyLinked = MutableStateFlow(appPreferences.linkedServices.contains(LinkedService.SPOTIFY))
     val isSpotifyLinked = _isSpotifyLinked.asStateFlow()
     

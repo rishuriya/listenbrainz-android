@@ -36,10 +36,10 @@ class PlaylistRepositoryImpl @Inject constructor(
         })
     }
 
-    override suspend fun updatePlaylist(songs: List<Song>, playlistID: Long) {
+    override suspend fun updatePlaylist(songs: List<Song>, playlistArt:String, playlistID: Long) {
         playlistDao.updatePlaylistSongs(songs.map {
             it.toSongEntity()
-        }, playlistID)
+        }, playlistArt, playlistID)
     }
 
 
@@ -49,20 +49,26 @@ class PlaylistRepositoryImpl @Inject constructor(
 
     override suspend fun insertSongToPlaylist(song: Song, playlist: Playlist) {
         playlist.items.plus(song)
+        if (playlist.id != 0L)
+            playlist.art=song.albumArt
         val newList = mutableListOf(song)
         newList.addAll(playlist.items)
-        updatePlaylist(newList, playlist.id)
+        updatePlaylist(newList,playlist.art, playlist.id)
     }
 
     override suspend fun insertSongsToPlaylist(songs: List<Song>, playlist: Playlist) {
         playlist.items.plus(songs)
+        if (playlist.id != 0L)
+            playlist.art=songs.last().albumArt
         songs.plus(playlist.items)
-        updatePlaylist(songs, playlist.id)
+        updatePlaylist(songs,playlist.art, playlist.id)
     }
 
     override suspend fun deleteSongFromPlaylist(song: Song, playlist: Playlist) {
         val newList = playlist.items.toMutableList().filter { it.mediaID != song.mediaID }
-        updatePlaylist(newList, playlist.id)
+        if(playlist.art==song.albumArt && playlist.id != 0L)
+            playlist.art=newList.last().albumArt
+        updatePlaylist(newList,playlist.art, playlist.id)
     }
 
     override suspend fun renamePlaylist(newName: String, playlistID: Long) {
