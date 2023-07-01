@@ -10,11 +10,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
+import org.listenbrainz.android.repository.preferences.AppPreferences
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.listenbrainz.android.model.PinnedRecording
-import org.listenbrainz.android.repository.AppPreferences
-import org.listenbrainz.android.repository.ListensRepository
+import org.listenbrainz.android.repository.listens.ListensRepository
 import org.listenbrainz.android.util.Resource
 import javax.inject.Inject
 
@@ -87,7 +90,7 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
-    
+
     
     fun logoutUser(context: Context) {
         appPreferences.logoutUser()

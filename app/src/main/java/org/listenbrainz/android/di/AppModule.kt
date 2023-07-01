@@ -6,8 +6,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import org.listenbrainz.android.repository.AppPreferences
-import org.listenbrainz.android.repository.AppPreferencesImpl
+import org.listenbrainz.android.repository.listens.ListensRepository
+import org.listenbrainz.android.repository.preferences.AppPreferences
+import org.listenbrainz.android.repository.preferences.AppPreferencesImpl
 import org.listenbrainz.android.service.BrainzPlayerServiceConnection
 import javax.inject.Singleton
 
@@ -17,7 +18,7 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun providesServiceConnection(@ApplicationContext context: Context) = BrainzPlayerServiceConnection(context)
+    fun providesServiceConnection(@ApplicationContext context: Context, appPreferences: AppPreferences, listensRepository: ListensRepository) = BrainzPlayerServiceConnection(context, appPreferences, listensRepository)
 
     @Singleton
     @Provides

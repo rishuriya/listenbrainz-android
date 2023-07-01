@@ -96,7 +96,7 @@ fun ProfilePage(
     val context = LocalContext.current
     var dominantColor by remember { mutableStateOf(Color.White) }
     val listens = viewModel.listensFlow.collectAsState().value
-    val imageResId = R.drawable.cover_img
+    val imageResId = R.drawable.playlist_cover
     var isContentLoaded by remember { mutableStateOf(false) }
     var isPlaylistContentLoaded by remember { mutableStateOf(false) }
     val onlinePlaylist = viewModel.playlistFlow.collectAsState().value
