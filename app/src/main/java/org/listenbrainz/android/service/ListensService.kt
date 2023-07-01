@@ -1,11 +1,7 @@
 package org.listenbrainz.android.service
 
 import okhttp3.ResponseBody
-import org.listenbrainz.android.model.CoverArt
-import org.listenbrainz.android.model.ListenBrainzExternalServices
-import org.listenbrainz.android.model.ListenSubmitBody
-import org.listenbrainz.android.model.Listens
-import org.listenbrainz.android.model.TokenValidation
+import org.listenbrainz.android.model.*
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -17,6 +13,24 @@ import retrofit2.http.Query
 interface ListensService {
     @GET("1/user/{user_name}/listens")
     suspend fun getUserListens(@Path("user_name") user_name: String, @Query("count") count: Int): Listens
+
+    @GET("1/user/{user_name}/followers")
+    suspend fun getUserFollowers(@Path("user_name") user_name: String): Follower
+
+    @GET("1/user/{user_name}/following")
+    suspend fun getUserFollowing(@Path("user_name") user_name: String): Following
+
+    @GET("1/user/{user_name}/listen-count")
+    suspend fun getUserListensCount(@Path("user_name") user_name: String): total_listen
+
+    @GET("1/{user_name}/pins")
+    suspend fun getPinnedSongs(@Path("user_name") user_name: String): pinned_song
+
+    @GET("1/user/{user_name}/playlists")
+    suspend fun getUserPlaylist(@Path("user_name") user_name: String): PlaylistResponse
+
+    @GET("1/playlist/{mbid}")
+    suspend fun getPlaylistInfo(@Path("mbid") mbid: String): playlistData
 
     @GET("http://coverartarchive.org/release/{MBID}")
     suspend fun getCoverArt(@Path("MBID") MBID: String): CoverArt

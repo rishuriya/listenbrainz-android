@@ -1,6 +1,7 @@
 package org.listenbrainz.android.ui.screens.brainzplayer
 
 
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -296,8 +297,8 @@ fun BrainzPlayerHomeScreen(
                 it.id != (-1).toLong()
             }) {
                 BrainzPlayerActivityCards(
-                    icon = "",
-                    errorIcon = it.art,
+                    icon = it.art,
+                        errorIcon = if (it.id == 0L) R.drawable.ic_queue_music else R.drawable.ic_liked,
                     title = it.title,
                     modifier = Modifier.clickable { navHostController.navigate("onPlaylistClick/${it.id}") })
             }

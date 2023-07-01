@@ -2,13 +2,11 @@ package org.listenbrainz.android.repository.listens
 
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.annotation.WorkerThread
 import okhttp3.ResponseBody
 import org.listenbrainz.android.application.App
-import org.listenbrainz.android.model.CoverArt
-import org.listenbrainz.android.model.Listen
-import org.listenbrainz.android.model.ListenSubmitBody
-import org.listenbrainz.android.model.TokenValidation
+import org.listenbrainz.android.model.*
 import org.listenbrainz.android.service.ListensService
 import org.listenbrainz.android.util.LinkedService
 import org.listenbrainz.android.util.Log.d
@@ -34,6 +32,66 @@ class ListensRepositoryImpl @Inject constructor(val service: ListensService) : L
         }
     }
 
+    override suspend fun fetchUserFollowers(user_name: String): Resource<List<String>> {
+        return try {
+            val response = service.getUserFollowers(user_name = user_name)
+            Resource(SUCCESS, response.follower)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource(FAILED, null)
+        }
+    }
+
+    override suspend fun fetchUserFollowing(user_name: String): Resource<List<String>> {
+        return try {
+            val response = service.getUserFollowing(user_name = user_name)
+            Resource(SUCCESS, response.following)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource(FAILED, null)
+        }
+    }
+
+    override suspend fun fetchUserTotalListens(user_name: String): Resource<Int> {
+        return try {
+            val response = service.getUserListensCount(user_name = user_name)
+            Resource(SUCCESS, response.payload.count)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource(FAILED, null)
+        }
+    }
+
+    override suspend fun fetchPinnedSongs(user_name: String): Resource<List<PinnedRecording>> {
+        return try {
+            val response = service.getPinnedSongs(user_name = user_name)
+            Resource(SUCCESS, response.pinned_recordings)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource(FAILED, null)
+        }
+    }
+
+    override suspend fun fetchUserplaylist(user_name: String): Resource<List<PlaylistItem>> {
+        return try {
+            val response = service.getUserPlaylist(user_name = user_name)
+            Resource(SUCCESS, response.playlists)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource(FAILED, null)
+        }
+    }
+
+    override suspend fun fetchPlaylistInfo(mbid: String): Resource<List<Track>> {
+        return try {
+            val response = service.getPlaylistInfo(mbid = mbid)
+            Log.d("Track",response.toString())
+            Resource(SUCCESS, response.playlist.track)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource(FAILED, null)
+        }
+    }
     override suspend fun fetchCoverArt(MBID: String): Resource<CoverArt> {
         return try {
             val coverArt = service.getCoverArt(MBID)

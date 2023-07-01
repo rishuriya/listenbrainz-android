@@ -171,6 +171,7 @@ class DaoTest {
             playlistDao.renamePlaylistName("newName", playlist.id)
             playlistDao.updatePlaylistSongs(
                 playlist.items.subList(0, targetPlaylistSize - 1),
+                    playlist.art,
                 playlist.id
             )
             playlistDao.getPlaylist((101).toLong()).test {

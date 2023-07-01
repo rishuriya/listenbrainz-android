@@ -20,8 +20,8 @@ interface PlaylistDao {
     @Upsert
     suspend fun insertPlaylists(playlistEntities: List<PlaylistEntity>)
 
-    @Query("UPDATE playlists SET items =:songs WHERE id =:playlistId")
-    suspend fun updatePlaylistSongs(songs:List<SongEntity>, playlistId: Long)
+    @Query("UPDATE playlists SET items =:songs, art =:playlistArt WHERE id =:playlistId")
+    suspend fun updatePlaylistSongs(songs:List<SongEntity>,playlistArt:String, playlistId: Long)
 
     @Query("UPDATE playlists SET title=:newName WHERE id =:playlistId")
     suspend fun renamePlaylistName(newName: String, playlistId: Long)
