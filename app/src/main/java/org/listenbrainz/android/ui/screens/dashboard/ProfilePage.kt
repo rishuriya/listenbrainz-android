@@ -75,6 +75,7 @@ class TriangleShape : Shape {
         return Outline.Generic(path)
     }
 }
+
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun ProfilePage(
@@ -84,24 +85,59 @@ fun ProfilePage(
         totalListen: Int =0,
         background: String=""
 ) {
-    Log.d("ProfilePage", "ProfilePage: $background")
     LaunchedEffect(Unit){
         viewModel.appPreferences.username.let {username ->
             if (username != null) {
                 viewModel.fetchUserListens(userName = username)
+                viewModel.fetchUserPlaylist(userName = username)
             }
         }
     }
-    val navHostController = rememberNavController()
-    val playlistViewModel = hiltViewModel<PlaylistViewModel>()
-    val playlists by playlistViewModel.playlists.collectAsState(initial = listOf())
     val context = LocalContext.current
     var dominantColor by remember { mutableStateOf(Color.White) }
-    val recentlyPlayed = Playlist.recentlyPlayed
     val listens = viewModel.listensFlow.collectAsState().value
-    val recentSong=recentlyPlayed.items + listens
     val imageResId = R.drawable.cover_img
-
+    var isContentLoaded by remember { mutableStateOf(false) }
+    var isPlaylistContentLoaded by remember { mutableStateOf(false) }
+    val onlinePlaylist = viewModel.playlistFlow.collectAsState().value
+    val tracks = onlinePlaylist.filter { it.playlist.track.isNotEmpty() }
+    val bitmapError = BitmapFactory.decodeResource(LocalContext.current.resources, R.drawable.playlist_cover)
+    LaunchedEffect(onlinePlaylist) {
+        var i=0
+        for (playlistData in tracks) {
+            val validTracks = playlistData.playlist.track.filter { track ->
+                track.extension.jspf.additional_metadata?.caa_release_mbid != null &&
+                        track.extension.jspf.additional_metadata?.caa_id != null
+            }
+            if(validTracks.isNotEmpty()) {
+                if (validTracks.last().extension.jspf.additional_metadata?.caa_release_mbid != null &&
+                        validTracks.last().extension.jspf.additional_metadata?.caa_id != null) {
+                    val url = Utils.getCoverArtUrl(validTracks.last().extension.jspf.additional_metadata?.caa_release_mbid!!, validTracks.last().extension.jspf.additional_metadata?.caa_id!!)
+                    try {
+                        val bitmap = withContext(Dispatchers.IO) {
+                            Glide.with(context)
+                                    .asBitmap()
+                                    .load(url)
+                                    .submit()
+                                    .get()
+                        }
+                        if(bitmap != null)
+                            validTracks.last().img=bitmap.asImageBitmap()
+                        else
+                            validTracks.last().img=bitmapError.asImageBitmap()
+                    } catch (e: Exception) {
+                        validTracks.last().img=bitmapError.asImageBitmap()
+                        // Handle the exception, e.g., show an error message
+                    }
+                }
+            }else {
+                playlistData.playlist.track.last().img=bitmapError.asImageBitmap()
+            }
+            i += 1
+        }
+        if(tracks.size == i && tracks.isNotEmpty())
+            isPlaylistContentLoaded = true
+    }
     LaunchedEffect(background) {
         try {
             val bitmap = withContext(Dispatchers.IO) {
@@ -113,6 +149,7 @@ fun ProfilePage(
             }
             val palette = Palette.Builder(bitmap).generate()
             dominantColor = Color(palette.getDominantColor(Color.White.toArgb()))
+            isContentLoaded = true
         } catch (e: Exception) {
             // Handle the exception, e.g., show an error message
         }
@@ -133,103 +170,107 @@ fun ProfilePage(
                     )
     ) {
         item {
+            if (!isContentLoaded) {
+                ShimmerAnimationBox()
+            } else {
             BoxWithConstraints(Modifier.fillMaxWidth()) {
-                Box(
-                        modifier = Modifier
-                                .fillMaxWidth()
-                                .height(300.dp)
-                                .clip(TriangleShape())
-                ) {
-                    // Content inside the box
-                    GlideImage(
-                            model = background,
+                    Box(
                             modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(300.dp),
-                            contentScale = ContentScale.FillBounds,
-                            contentDescription = "Album Cover Art"
+                                    .height(300.dp)
+                                    .clip(TriangleShape())
                     ) {
-                        it.placeholder(imageResId)
-                                .override(200)
-                    }
-                }
-                Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        shadowElevation = 5.dp,
-                        modifier = Modifier
-                                .width(330.dp)
-                                .height(200.dp)
-                                .zIndex(1f)
-                                .align(Alignment.BottomCenter)
-                                .background(Color.White, RoundedCornerShape(20.dp))
-                ) {
-                    Column {
-                        Row(
+                        // Content inside the box
+                        GlideImage(
+                                model = background,
                                 modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 60.dp, start = 20.dp, end = 20.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                        .height(300.dp),
+                                contentScale = ContentScale.FillBounds,
+                                contentDescription = "Album Cover Art"
                         ) {
-                            Text(
-                                    text = viewModel.appPreferences.username.toString(),
-                                    color = Color.Black,
-                                    fontSize = 30.sp,
-                                    fontWeight = FontWeight.Bold
-                            )
-                            Icon(
-                                    painter = painterResource(id = R.drawable.ic_user),
-                                    contentDescription = "Edit",
-                                    tint = Color.Black,
-                                    modifier = Modifier
-                                            .padding(start = 10.dp)
-                                            .size(30.dp)
-                            )
+                            it.placeholder(imageResId)
+                                    .override(200)
                         }
-                        Row(modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 20.dp, start = 20.dp, end = 20.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    }
+                    Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            shadowElevation = 5.dp,
+                            modifier = Modifier
+                                    .width(330.dp)
+                                    .height(200.dp)
+                                    .zIndex(1f)
+                                    .align(Alignment.BottomCenter)
+                                    .background(Color.White, RoundedCornerShape(20.dp))
+                    ) {
+                        Column {
+                            Row(
+                                    modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 60.dp, start = 20.dp, end = 20.dp),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                            ) {
                                 Text(
-                                        text = followers.toString(),
+                                        text = viewModel.appPreferences.username.toString(),
                                         color = Color.Black,
-                                        fontSize = 20.sp,
+                                        fontSize = 30.sp,
                                         fontWeight = FontWeight.Bold
                                 )
-                                Text(
-                                        text = "Followers",
-                                        color = Color.Black,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Light
+                                Icon(
+                                        painter = painterResource(id = R.drawable.ic_user),
+                                        contentDescription = "Edit",
+                                        tint = Color.Black,
+                                        modifier = Modifier
+                                                .padding(start = 10.dp)
+                                                .size(30.dp)
                                 )
                             }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                        text = following.toString(),
-                                        color = Color.Black,
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                        text = "Following",
-                                        color = Color.Black,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Light
-                                )
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                        text = totalListen.toString(),
-                                        color = Color.Black,
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                        text = "Listens",
-                                        color = Color.Black,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Light
-                                )
+                            Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 20.dp, start = 20.dp, end = 20.dp),
+                                    horizontalArrangement = Arrangement.SpaceEvenly) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                            text = followers.toString(),
+                                            color = Color.Black,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                            text = "Followers",
+                                            color = Color.Black,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Light
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                            text = following.toString(),
+                                            color = Color.Black,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                            text = "Following",
+                                            color = Color.Black,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Light
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                            text = totalListen.toString(),
+                                            color = Color.Black,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                            text = "Listens",
+                                            color = Color.Black,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Light
+                                    )
+                                }
                             }
                         }
                     }
@@ -261,12 +302,15 @@ fun ProfilePage(
                 )
             }
             LazyRow {
-                items(playlists.filter {
-                    it.id != (-1).toLong() && it.id != (1).toLong()
-                }) {
-                    ProfileCardBig(
-                            playlist=it
-                    )
+                if(!isPlaylistContentLoaded) {
+                    items(3) {
+                        ShimmerAnimationBigBox()
+                    }
+                }
+                else{
+                    items(tracks) {
+                        ProfileCardBig(it)
+                    }
                 }
             }
 

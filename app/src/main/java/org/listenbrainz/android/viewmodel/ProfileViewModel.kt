@@ -46,7 +46,6 @@ class ProfileViewModel @Inject constructor(
             val follower = repository.fetchUserFollowers(userName)
             val following = repository.fetchUserFollowing(userName)
             val totalListen= repository.fetchUserTotalListens(userName)
-            Log.d("UserDetails", "Followers: ${follower.data?.size}, Following: ${following.data?.size}, Total Listens: ${totalListen.data}")
             isLoading = when(follower.status){
                 Resource.Status.SUCCESS -> {
                     _followersFlow.update { follower.data ?: emptyList() }

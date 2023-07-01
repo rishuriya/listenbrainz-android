@@ -29,6 +29,7 @@ import org.listenbrainz.android.BuildConfig
 import org.listenbrainz.android.model.Listen
 import org.listenbrainz.android.model.ListenBitmap
 import org.listenbrainz.android.model.PinnedRecording
+import org.listenbrainz.android.model.PlaylistItem
 import org.listenbrainz.android.repository.AppPreferences
 import org.listenbrainz.android.repository.ListensRepository
 import org.listenbrainz.android.service.YouTubeApiService
@@ -61,7 +62,8 @@ class ListensViewModel @Inject constructor(
     val listensFlow = _listensFlow.asStateFlow()
     private val _isSpotifyLinked = MutableStateFlow(appPreferences.linkedServices.contains(LinkedService.SPOTIFY))
     val isSpotifyLinked = _isSpotifyLinked.asStateFlow()
-    
+    private val _playlistFlow = MutableStateFlow(listOf<PlaylistItem>())
+    val playlistFlow = _playlistFlow.asStateFlow()
     var isLoading: Boolean  by mutableStateOf(true)
     var isPaused=false
     var playerState: PlayerState? by mutableStateOf(null)
@@ -111,6 +113,34 @@ class ListensViewModel @Inject constructor(
                 SUCCESS -> {
                     // Updating listens
                     _listensFlow.update { response.data ?: emptyList() }
+                    false
+                }
+                LOADING -> true
+                FAILED -> false
+            }
+        }
+    }
+    fun fetchUserPlaylist(userName: String) {
+        viewModelScope.launch {
+            val response = repository.fetchUserplaylist(userName)
+            isLoading = when(response.status){
+                SUCCESS -> {
+                    // Updating playlist
+                    for (data in response.data!!) {
+                        Log.d("mbid",data.playlist.identifier.substring(34))
+                        val details = repository.fetchPlaylistInfo(data.playlist.identifier.substring(34))
+                        isLoading= when(details.status){
+                            SUCCESS -> {
+                                //Log.d("OnlinePlaylist",details.data.toString())
+                                data.playlist.track = details.data!!
+                                false
+                            }
+                            LOADING -> true
+                            FAILED -> false
+                        }
+                    }
+                    Log.d("OnlinePlaylist",response.data.toString())
+                    _playlistFlow.update { response.data ?: emptyList() }
                     false
                 }
                 LOADING -> true

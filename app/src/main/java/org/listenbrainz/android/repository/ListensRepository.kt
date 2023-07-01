@@ -16,6 +16,10 @@ interface ListensRepository {
     suspend fun fetchUserTotalListens(user_name: String): Resource<Int>
 
     suspend fun fetchPinnedSongs(user_name: String): Resource<List<PinnedRecording>>
+
+    suspend fun fetchUserplaylist(user_name: String):Resource<List<PlaylistItem>>
+
+    suspend fun fetchPlaylistInfo(mbid: String): Resource<List<Track>>
     
     suspend fun fetchCoverArt(MBID: String): Resource<CoverArt>
 

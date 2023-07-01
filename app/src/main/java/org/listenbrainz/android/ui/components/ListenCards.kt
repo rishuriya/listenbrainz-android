@@ -1,7 +1,9 @@
 package org.listenbrainz.android.ui.components
 
+import android.media.Image
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -39,9 +41,13 @@ import com.bumptech.glide.integration.compose.GlideImage
 import org.listenbrainz.android.R
 import org.listenbrainz.android.model.Listen
 import org.listenbrainz.android.model.Playlist
+import org.listenbrainz.android.model.PlaylistItem
 import org.listenbrainz.android.ui.theme.lb_purple
 import org.listenbrainz.android.ui.theme.offWhite
 import org.listenbrainz.android.ui.theme.onScreenUiModeIsDark
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -296,7 +302,7 @@ fun ProfileCardSmall(
 @Composable
 @OptIn(ExperimentalGlideComposeApi::class)
 fun ProfileCardBig(
-        playlist: Playlist,
+        playlist: PlaylistItem,
 ) {
     Box(
             modifier = Modifier
@@ -311,26 +317,18 @@ fun ProfileCardBig(
                         modifier = Modifier
                                 .size(130.dp)
                 ) {
-                    AsyncImage(
+                    Image(
                             modifier = Modifier
                                     .fillMaxSize()
                                     .background(colorResource(id = R.color.bp_bottom_song_viewpager), RoundedCornerShape(10.dp)),
-                            model = playlist.art,
+                            bitmap = playlist.playlist.track
+                                    .filter { it.img != null }.last().img,
                             contentDescription = "",
-                            error = forwardingPainter(
-                                    painter = painterResource(id = R.drawable.ic_queue_music_playing)
-                            ) { info ->
-                                inset(25f, 25f) {
-                                    with(info.painter) {
-                                        draw(size, info.alpha, info.colorFilter)
-                                    }
-                                }
-                            },
-                            contentScale = ContentScale.Fit
+                            contentScale = ContentScale.FillBounds
                     )
                 }
                 androidx.compose.material3.Text(
-                        text = playlist.title,
+                        text = playlist.playlist.title,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -339,7 +337,7 @@ fun ProfileCardBig(
                         color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                        text = playlist.items.size.toString() + " Songs",
+                        text = playlist.playlist.track.size.toString() + " Songs",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Light,
                         textAlign = TextAlign.Center,
@@ -353,62 +351,3 @@ fun ProfileCardBig(
     }
 }
 
-@Composable
-@OptIn(ExperimentalGlideComposeApi::class)
-fun ShimmerAnimation() {
-    val ShimmerColorShades = listOf(
-            Color.LightGray.copy(0.9f),
-            Color.LightGray.copy(0.2f),
-            Color.LightGray.copy(0.9f)
-    )
-    val transition = rememberInfiniteTransition()
-    val translateAnim by transition.animateFloat(
-            initialValue = 0f,
-            targetValue = 1000f,
-            animationSpec = infiniteRepeatable(
-
-
-                    // Tween Animates between values over specified [durationMillis]
-                    tween(durationMillis = 1200, easing = FastOutSlowInEasing),
-                    RepeatMode.Reverse
-            )
-    )
-
-    val brush = Brush.linearGradient(
-            colors = ShimmerColorShades,
-            start = Offset(10f, 10f),
-            end = Offset(translateAnim, translateAnim)
-    )
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
-    Surface(
-            modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-            shape = RoundedCornerShape(5.dp),
-            shadowElevation = 5.dp
-    ) {
-        Row(
-                modifier = Modifier
-                        .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Box(
-                    modifier = Modifier.size(70.dp)
-                            .padding(10.dp)
-                            .background(brush = brush),
-            ) {
-            }
-            Box(modifier = Modifier
-                    .width(screenWidth-70.dp)
-                    .height(70.dp)
-                    .padding(10.dp)
-                    .background(brush = brush)
-            )
-            {
-
-            }
-        }
-    }
-}

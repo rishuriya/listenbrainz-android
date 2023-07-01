@@ -26,6 +26,12 @@ interface ListensService {
     @GET("1/{user_name}/pins")
     suspend fun getPinnedSongs(@Path("user_name") user_name: String): pinned_song
 
+    @GET("1/user/{user_name}/playlists")
+    suspend fun getUserPlaylist(@Path("user_name") user_name: String): PlaylistResponse
+
+    @GET("1/playlist/{mbid}")
+    suspend fun getPlaylistInfo(@Path("mbid") mbid: String): playlistData
+
     @GET("http://coverartarchive.org/release/{MBID}")
     suspend fun getCoverArt(@Path("MBID") MBID: String): CoverArt
 

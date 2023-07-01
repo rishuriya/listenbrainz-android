@@ -71,6 +71,27 @@ class ListensRepositoryImpl @Inject constructor(val service: ListensService) : L
             Resource(FAILED, null)
         }
     }
+
+    override suspend fun fetchUserplaylist(user_name: String): Resource<List<PlaylistItem>> {
+        return try {
+            val response = service.getUserPlaylist(user_name = user_name)
+            Resource(SUCCESS, response.playlists)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource(FAILED, null)
+        }
+    }
+
+    override suspend fun fetchPlaylistInfo(mbid: String): Resource<List<Track>> {
+        return try {
+            val response = service.getPlaylistInfo(mbid = mbid)
+            Log.d("Track",response.toString())
+            Resource(SUCCESS, response.playlist.track)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource(FAILED, null)
+        }
+    }
     override suspend fun fetchCoverArt(MBID: String): Resource<CoverArt> {
         return try {
             val coverArt = service.getCoverArt(MBID)
